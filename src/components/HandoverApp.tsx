@@ -24,12 +24,12 @@ const HandoverApp = () => {
   const [editingWeek, setEditingWeek] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingFormat, setEditingFormat] = useState(false);
-  const [newChannels, setNewChannels] = useState({});
+  const [newChannels, setNewChannels] = useState<{[key: string]: string}>({});
   const [sentEmails, setSentEmails] = useState(new Set());
 
   const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-  const addChannel = (day) => {
+  const addChannel = (day: string) => {
     const channel = newChannels[day]?.trim();
     if (channel) {
       setSchedule(prev => ({
@@ -40,19 +40,19 @@ const HandoverApp = () => {
     }
   };
 
-  const removeChannel = (day, index) => {
+  const removeChannel = (day: string, index: number) => {
     setSchedule(prev => ({
       ...prev,
       [day]: prev[day].filter((_, i) => i !== index)
     }));
   };
 
-  const moveChannel = (day, index, direction) => {
+  const moveChannel = (day: string, index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= schedule[day].length) return;
+    if (newIndex < 0 || newIndex >= schedule[day as keyof typeof schedule].length) return;
 
     setSchedule(prev => {
-      const dayChannels = [...prev[day]];
+      const dayChannels = [...prev[day as keyof typeof prev]];
       const [movedChannel] = dayChannels.splice(index, 1);
       dayChannels.splice(newIndex, 0, movedChannel);
       
@@ -63,13 +63,13 @@ const HandoverApp = () => {
     });
   };
 
-  const sendEmail = (channel, day) => {
+  const sendEmail = (channel: string, day: string) => {
     const subject = emailFormat.subject
       .replace('{channel}', channel)
-      .replace('{week}', weekNo);
+      .replace('{week}', weekNo.toString());
     const body = emailFormat.body
       .replace('{channel}', channel)
-      .replace('{week}', weekNo);
+      .replace('{week}', weekNo.toString());
     
     const mailtoLink = `mailto:${defaultEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailtoLink);
@@ -175,7 +175,7 @@ const HandoverApp = () => {
                     value={emailFormat.body}
                     onChange={(e) => setEmailFormat(prev => ({ ...prev, body: e.target.value }))}
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-gray-500 resize-none"
-                    rows="2"
+                    rows={2}
                   />
                 </div>
                 <div className="text-xs text-gray-500">
@@ -193,7 +193,7 @@ const HandoverApp = () => {
               <h2 className="text-lg font-medium text-gray-900 mb-4">{day}</h2>
               
               <div className="space-y-2 mb-4">
-                {schedule[day].map((channel, index) => (
+                {schedule[day as keyof typeof schedule].map((channel, index) => (
                   <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded group">
                     <span className="text-sm text-gray-700">{channel}</span>
                     <div className="flex items-center gap-1">
@@ -213,9 +213,9 @@ const HandoverApp = () => {
                         </button>
                         <button
                           onClick={() => moveChannel(day, index, 'down')}
-                          disabled={index === schedule[day].length - 1}
+                          disabled={index === schedule[day as keyof typeof schedule].length - 1}
                           className={`p-0.5 rounded transition-colors ${
-                            index === schedule[day].length - 1
+                            index === schedule[day as keyof typeof schedule].length - 1
                               ? 'text-gray-300 cursor-not-allowed'
                               : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'
                           }`}
