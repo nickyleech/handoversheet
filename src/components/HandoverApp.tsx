@@ -3,18 +3,6 @@
 import React, { useState } from 'react';
 import { Plus, X, Mail, Edit2, Check, Settings, ChevronUp, ChevronDown } from 'lucide-react';
 
-interface ScheduleData {
-  Saturday: string[];
-  Sunday: string[];
-  Monday: string[];
-  Tuesday: string[];
-  Wednesday: string[];
-  Thursday: string[];
-  Friday: string[];
-}
-
-type DayKey = keyof ScheduleData;
-
 const HandoverApp = () => {
   const [weekNo, setWeekNo] = useState(32);
   const [defaultEmail, setDefaultEmail] = useState('nicky.leech@pa.media');
@@ -23,43 +11,65 @@ const HandoverApp = () => {
     body: '{channel} for Week {week} is ready'
   });
   
-  const [schedule, setSchedule] = useState<ScheduleData>({
-    Saturday: ['BBC Radio 1', 'Channel 4'],
-    Sunday: ['BBC One', 'ITV'],
-    Monday: ['Radio 4', 'Channel 4', 'Channel 5'],
-    Tuesday: ['Classic FM'],
-    Wednesday: ['BBC One', 'BBC Two', 'ITV'],
-    Thursday: ['Virgin Media One', 'RTE One'],
-    Friday: ['BBC Radio Scotland', 'Channel 5']
+  const [schedule, setSchedule] = useState({
+    Saturday: [
+      { time: '09:00', channel: 'BBC Radio 1' },
+      { time: '14:00', channel: 'Channel 4' }
+    ],
+    Sunday: [
+      { time: '10:00', channel: 'BBC One' },
+      { time: '15:00', channel: 'ITV' }
+    ],
+    Monday: [
+      { time: '08:00', channel: 'Radio 4' },
+      { time: '12:00', channel: 'Channel 4' },
+      { time: '16:00', channel: 'Channel 5' }
+    ],
+    Tuesday: [
+      { time: '11:00', channel: 'Classic FM' }
+    ],
+    Wednesday: [
+      { time: '09:00', channel: 'BBC One' },
+      { time: '13:00', channel: 'BBC Two' },
+      { time: '17:00', channel: 'ITV' }
+    ],
+    Thursday: [
+      { time: '10:00', channel: 'Virgin Media One' },
+      { time: '15:00', channel: 'RTE One' }
+    ],
+    Friday: [
+      { time: '08:30', channel: 'BBC Radio Scotland' },
+      { time: '14:30', channel: 'Channel 5' }
+    ]
   });
 
   const [editingWeek, setEditingWeek] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingFormat, setEditingFormat] = useState(false);
-  const [newChannels, setNewChannels] = useState<Record<string, string>>({});
-  const [sentEmails, setSentEmails] = useState(new Set<string>());
+  const [newChannels, setNewChannels] = useState({});
+  const [sentEmails, setSentEmails] = useState(new Set());
 
-  const days: DayKey[] = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-  const addChannel = (day: DayKey) => {
+  const addChannel = (day) => {
     const channel = newChannels[day]?.trim();
     if (channel) {
       setSchedule(prev => ({
         ...prev,
-        [day]: [...prev[day], channel]
+        [day]: [...prev[day], { time: '09:00', channel }]
       }));
       setNewChannels(prev => ({ ...prev, [day]: '' }));
     }
   };
 
-  const removeChannel = (day: DayKey, index: number) => {
+  const removeChannel = (day, index) => {
     setSchedule(prev => ({
       ...prev,
       [day]: prev[day].filter((_, i) => i !== index)
     }));
   };
 
-  const moveChannel = (day: DayKey, index: number, direction: 'up' | 'down') => {
+  const moveChannel = (day, index, direction) => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= schedule[day].length) return;
 
@@ -75,18 +85,27 @@ const HandoverApp = () => {
     });
   };
 
-  const sendEmail = (channel: string, day: DayKey) => {
+  const updateTime = (day, index, newTime) => {
+    setSchedule(prev => ({
+      ...prev,
+      [day]: prev[day].map((item, i) => 
+        i === index ? { ...item, time: newTime } : item
+      )
+    }));
+  };
+
+  const sendEmail = (channelObj, day) => {
     const subject = emailFormat.subject
-      .replace('{channel}', channel)
-      .replace('{week}', weekNo.toString());
+      .replace('{channel}', channelObj.channel)
+      .replace('{week}', weekNo);
     const body = emailFormat.body
-      .replace('{channel}', channel)
-      .replace('{week}', weekNo.toString());
+      .replace('{channel}', channelObj.channel)
+      .replace('{week}', weekNo);
     
     const mailtoLink = `mailto:${defaultEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailtoLink);
     
-    setSentEmails(prev => new Set([...prev, `${day}-${channel}`]));
+    setSentEmails(prev => new Set([...prev, `${day}-${channelObj.channel}`]));
   };
 
   return (
@@ -187,7 +206,7 @@ const HandoverApp = () => {
                     value={emailFormat.body}
                     onChange={(e) => setEmailFormat(prev => ({ ...prev, body: e.target.value }))}
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-gray-500 resize-none"
-                    rows={2}
+                    rows="2"
                   />
                 </div>
                 <div className="text-xs text-gray-500">
@@ -205,9 +224,15 @@ const HandoverApp = () => {
               <h2 className="text-lg font-medium text-gray-900 mb-4">{day}</h2>
               
               <div className="space-y-2 mb-4">
-                {schedule[day].map((channel, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded group">
-                    <span className="text-sm text-gray-700">{channel}</span>
+                {schedule[day].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 py-2 px-3 bg-gray-50 rounded group">
+                    <input
+                      type="time"
+                      value={item.time}
+                      onChange={(e) => updateTime(day, index, e.target.value)}
+                      className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-gray-500 bg-white"
+                    />
+                    <span className="flex-1 text-sm text-gray-700">{item.channel}</span>
                     <div className="flex items-center gap-1">
                       {/* Move up/down buttons */}
                       <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity">
@@ -238,9 +263,9 @@ const HandoverApp = () => {
                       </div>
                       
                       <button
-                        onClick={() => sendEmail(channel, day)}
+                        onClick={() => sendEmail(item, day)}
                         className={`p-1.5 rounded transition-colors ${
-                          sentEmails.has(`${day}-${channel}`)
+                          sentEmails.has(`${day}-${item.channel}`)
                             ? 'bg-green-100 text-green-700'
                             : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                         }`}
