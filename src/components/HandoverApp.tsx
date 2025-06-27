@@ -3,9 +3,17 @@
 import React, { useState } from 'react';
 import { Plus, X, Mail, Edit2, Check, Settings, ChevronUp, ChevronDown } from 'lucide-react';
 
-type ScheduleType = {
-  [key: string]: string[];
-};
+interface ScheduleData {
+  Saturday: string[];
+  Sunday: string[];
+  Monday: string[];
+  Tuesday: string[];
+  Wednesday: string[];
+  Thursday: string[];
+  Friday: string[];
+}
+
+type DayKey = keyof ScheduleData;
 
 const HandoverApp = () => {
   const [weekNo, setWeekNo] = useState(32);
@@ -15,7 +23,7 @@ const HandoverApp = () => {
     body: '{channel} for Week {week} is ready'
   });
   
-  const [schedule, setSchedule] = useState<ScheduleType>({
+  const [schedule, setSchedule] = useState<ScheduleData>({
     Saturday: ['BBC Radio 1', 'Channel 4'],
     Sunday: ['BBC One', 'ITV'],
     Monday: ['Radio 4', 'Channel 4', 'Channel 5'],
@@ -28,12 +36,12 @@ const HandoverApp = () => {
   const [editingWeek, setEditingWeek] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingFormat, setEditingFormat] = useState(false);
-  const [newChannels, setNewChannels] = useState<{[key: string]: string}>({});
+  const [newChannels, setNewChannels] = useState<Record<string, string>>({});
   const [sentEmails, setSentEmails] = useState(new Set<string>());
 
-  const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const days: DayKey[] = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-  const addChannel = (day: string) => {
+  const addChannel = (day: DayKey) => {
     const channel = newChannels[day]?.trim();
     if (channel) {
       setSchedule(prev => ({
@@ -44,14 +52,14 @@ const HandoverApp = () => {
     }
   };
 
-  const removeChannel = (day: string, index: number) => {
+  const removeChannel = (day: DayKey, index: number) => {
     setSchedule(prev => ({
       ...prev,
       [day]: prev[day].filter((_, i) => i !== index)
     }));
   };
 
-  const moveChannel = (day: string, index: number, direction: 'up' | 'down') => {
+  const moveChannel = (day: DayKey, index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= schedule[day].length) return;
 
@@ -67,7 +75,7 @@ const HandoverApp = () => {
     });
   };
 
-  const sendEmail = (channel: string, day: string) => {
+  const sendEmail = (channel: string, day: DayKey) => {
     const subject = emailFormat.subject
       .replace('{channel}', channel)
       .replace('{week}', weekNo.toString());
