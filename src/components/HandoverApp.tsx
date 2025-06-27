@@ -294,3 +294,4 @@ const HandoverApp = () => {
 };
 
 export default HandoverApp;
+EOF
