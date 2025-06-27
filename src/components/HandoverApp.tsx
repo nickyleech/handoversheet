@@ -51,7 +51,7 @@ const HandoverApp = () => {
 
   const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-  const addChannel = (day) => {
+  const addChannel = (day: string) => {
     const channel = newChannels[day]?.trim();
     if (channel) {
       setSchedule(prev => ({
@@ -62,14 +62,14 @@ const HandoverApp = () => {
     }
   };
 
-  const removeChannel = (day, index) => {
+  const removeChannel = (day: string, index: number) => {
     setSchedule(prev => ({
       ...prev,
       [day]: prev[day].filter((_, i) => i !== index)
     }));
   };
 
-  const moveChannel = (day, index, direction) => {
+  const moveChannel = (day: string, index: number, direction: "up" | "down") => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= schedule[day].length) return;
 
@@ -94,7 +94,7 @@ const HandoverApp = () => {
     }));
   };
 
-  const sendEmail = (channelObj, day) => {
+  const sendEmail = (channelObj: string, day: string) => {
     const subject = emailFormat.subject
       .replace('{channel}', channelObj.channel)
       .replace('{week}', weekNo);
