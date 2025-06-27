@@ -3,6 +3,10 @@
 import React, { useState } from 'react';
 import { Plus, X, Mail, Edit2, Check, Settings, ChevronUp, ChevronDown } from 'lucide-react';
 
+type ScheduleType = {
+  [key: string]: string[];
+};
+
 const HandoverApp = () => {
   const [weekNo, setWeekNo] = useState(32);
   const [defaultEmail, setDefaultEmail] = useState('nicky.leech@pa.media');
@@ -11,7 +15,7 @@ const HandoverApp = () => {
     body: '{channel} for Week {week} is ready'
   });
   
-  const [schedule, setSchedule] = useState({
+  const [schedule, setSchedule] = useState<ScheduleType>({
     Saturday: ['BBC Radio 1', 'Channel 4'],
     Sunday: ['BBC One', 'ITV'],
     Monday: ['Radio 4', 'Channel 4', 'Channel 5'],
@@ -25,7 +29,7 @@ const HandoverApp = () => {
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingFormat, setEditingFormat] = useState(false);
   const [newChannels, setNewChannels] = useState<{[key: string]: string}>({});
-  const [sentEmails, setSentEmails] = useState(new Set());
+  const [sentEmails, setSentEmails] = useState(new Set<string>());
 
   const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -49,10 +53,10 @@ const HandoverApp = () => {
 
   const moveChannel = (day: string, index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= schedule[day as keyof typeof schedule].length) return;
+    if (newIndex < 0 || newIndex >= schedule[day].length) return;
 
     setSchedule(prev => {
-      const dayChannels = [...prev[day as keyof typeof prev]];
+      const dayChannels = [...prev[day]];
       const [movedChannel] = dayChannels.splice(index, 1);
       dayChannels.splice(newIndex, 0, movedChannel);
       
@@ -193,7 +197,7 @@ const HandoverApp = () => {
               <h2 className="text-lg font-medium text-gray-900 mb-4">{day}</h2>
               
               <div className="space-y-2 mb-4">
-                {schedule[day as keyof typeof schedule].map((channel, index) => (
+                {schedule[day].map((channel, index) => (
                   <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded group">
                     <span className="text-sm text-gray-700">{channel}</span>
                     <div className="flex items-center gap-1">
@@ -213,9 +217,9 @@ const HandoverApp = () => {
                         </button>
                         <button
                           onClick={() => moveChannel(day, index, 'down')}
-                          disabled={index === schedule[day as keyof typeof schedule].length - 1}
+                          disabled={index === schedule[day].length - 1}
                           className={`p-0.5 rounded transition-colors ${
-                            index === schedule[day as keyof typeof schedule].length - 1
+                            index === schedule[day].length - 1
                               ? 'text-gray-300 cursor-not-allowed'
                               : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'
                           }`}
