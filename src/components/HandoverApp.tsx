@@ -46,8 +46,8 @@ const HandoverApp = () => {
   const [editingWeek, setEditingWeek] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingFormat, setEditingFormat] = useState(false);
-  const [newChannels, setNewChannels] = useState({});
-  const [sentEmails, setSentEmails] = useState(new Set());
+  const [newChannels, setNewChannels] = useState<Record<string, string>>({});
+  const [sentEmails, setSentEmails] = useState(new Set<string>());
 
   const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
