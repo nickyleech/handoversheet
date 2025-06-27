@@ -3,6 +3,24 @@
 import React, { useState } from 'react';
 import { Plus, X, Mail, Edit2, Check, Settings, ChevronUp, ChevronDown } from 'lucide-react';
 
+// TypeScript interfaces
+interface ScheduleItem {
+  time: string;
+  channel: string;
+}
+
+interface ScheduleData {
+  Saturday: ScheduleItem[];
+  Sunday: ScheduleItem[];
+  Monday: ScheduleItem[];
+  Tuesday: ScheduleItem[];
+  Wednesday: ScheduleItem[];
+  Thursday: ScheduleItem[];
+  Friday: ScheduleItem[];
+}
+
+type DayKey = keyof ScheduleData;
+
 const HandoverApp = () => {
   const [weekNo, setWeekNo] = useState(32);
   const [defaultEmail, setDefaultEmail] = useState('nicky.leech@pa.media');
@@ -11,7 +29,7 @@ const HandoverApp = () => {
     body: '{channel} for Week {week} is ready'
   });
   
-  const [schedule, setSchedule] = useState({
+  const [schedule, setSchedule] = useState<ScheduleData>({
     Saturday: [
       { time: '09:00', channel: 'BBC Radio 1' },
       { time: '14:00', channel: 'Channel 4' }
@@ -49,9 +67,9 @@ const HandoverApp = () => {
   const [newChannels, setNewChannels] = useState<Record<string, string>>({});
   const [sentEmails, setSentEmails] = useState(new Set<string>());
 
-  const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const days: DayKey[] = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-  const addChannel = (day: string) => {
+  const addChannel = (day: DayKey) => {
     const channel = newChannels[day]?.trim();
     if (channel) {
       setSchedule(prev => ({
@@ -62,14 +80,14 @@ const HandoverApp = () => {
     }
   };
 
-  const removeChannel = (day: string, index: number) => {
+  const removeChannel = (day: DayKey, index: number) => {
     setSchedule(prev => ({
       ...prev,
       [day]: prev[day].filter((_, i) => i !== index)
     }));
   };
 
-  const moveChannel = (day: string, index: number, direction: "up" | "down") => {
+  const moveChannel = (day: DayKey, index: number, direction: "up" | "down") => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= schedule[day].length) return;
 
@@ -85,7 +103,7 @@ const HandoverApp = () => {
     });
   };
 
-  const updateTime = (day, index, newTime) => {
+  const updateTime = (day: DayKey, index: number, newTime: string) => {
     setSchedule(prev => ({
       ...prev,
       [day]: prev[day].map((item, i) => 
@@ -94,13 +112,13 @@ const HandoverApp = () => {
     }));
   };
 
-  const sendEmail = (channelObj: string, day: string) => {
+  const sendEmail = (channelObj: ScheduleItem, day: DayKey) => {
     const subject = emailFormat.subject
       .replace('{channel}', channelObj.channel)
-      .replace('{week}', weekNo);
+      .replace('{week}', weekNo.toString());
     const body = emailFormat.body
       .replace('{channel}', channelObj.channel)
-      .replace('{week}', weekNo);
+      .replace('{week}', weekNo.toString());
     
     const mailtoLink = `mailto:${defaultEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailtoLink);
@@ -206,7 +224,7 @@ const HandoverApp = () => {
                     value={emailFormat.body}
                     onChange={(e) => setEmailFormat(prev => ({ ...prev, body: e.target.value }))}
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-gray-500 resize-none"
-                    rows="2"
+                    rows={2}
                   />
                 </div>
                 <div className="text-xs text-gray-500">
